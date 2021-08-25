@@ -282,7 +282,7 @@ class UserDirectoryHandler(StateDeltasHandler):
             logger.debug("No change")
             return
 
-        # There's been a change to or from being world readable/public.
+        # There's been a change to or from being world readable or public.
 
         is_public = await self.store.is_room_world_readable_or_publicly_joinable(
             room_id
@@ -290,11 +290,11 @@ class UserDirectoryHandler(StateDeltasHandler):
 
         logger.debug("Change: %r, is_public: %r", diff, is_public)
 
-        if diff and not is_public:
+        if diff is DiffWithRefVal.now_matches and not is_public:
             # If we became world readable but room isn't currently public then
             # we ignore the change
             return
-        elif not diff and is_public:
+        elif DiffWithRefVal.stopped_matching and is_public:
             # If we stopped being world readable but are still public,
             # ignore the change
             return
