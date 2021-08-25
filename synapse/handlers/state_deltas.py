@@ -42,7 +42,7 @@ class DiffWithRefVal(Enum):
     stopped_matching = auto()
 
     def is_change(self) -> bool:
-        return self in (self.now_matches, self.no_longer_matches)
+        return self in (self.now_matches, self.stopped_matching)
 
 
 class StateDeltasHandler:

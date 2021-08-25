@@ -219,14 +219,14 @@ class UserDirectoryHandler(StateDeltasHandler):
 
                 is_support = await self.store.is_support_user(state_key)
                 if not is_support:
-                    if not joined_diff.changed():
+                    if not joined_diff.is_change():
                         # Handle any profile changes
                         await self._handle_profile_change(
                             state_key, room_id, prev_event_id, event_id
                         )
                         continue
 
-                    if joined_diff.now_matches:  # The user joined
+                    if joined_diff is DiffWithRefVal.now_matches:  # The user joined
                         event = await self.store.get_event(event_id, allow_none=True)
                         # It isn't expected for this event to not exist, but we
                         # don't want the entire background process to break.
@@ -294,7 +294,7 @@ class UserDirectoryHandler(StateDeltasHandler):
             # If we became world readable but room isn't currently public then
             # we ignore the change
             return
-        elif DiffWithRefVal.stopped_matching and is_public:
+        elif diff is DiffWithRefVal.stopped_matching and is_public:
             # If we stopped being world readable but are still public,
             # ignore the change
             return
