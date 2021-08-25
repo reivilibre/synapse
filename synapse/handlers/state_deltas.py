@@ -13,12 +13,35 @@
 # limitations under the License.
 
 import logging
+from enum import Enum, auto
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from synapse.server import HomeServer
 
 logger = logging.getLogger(__name__)
+
+
+class DiffWithRefVal(Enum):
+    """
+
+    Suppose we're watching an unknown quantity `X` and we're interested if it
+    takes on a significant value `v`. For a given observation `x`, either `x == v`
+    or `x != v`. Therefore a pair of observations `(x1, x2)` represents one of four
+    transitions.
+
+    x1 == v and x2 == v: both match, no change
+    x1 != v and x2 != v: neither match, no change
+    x1 != v and x2 == v: now matches, changed
+    x1 == v and x2 != v: no longer matches, changed
+    """
+    both_match = auto()
+    neither_match = auto()
+    now_matches = auto()
+    stopped_matching = auto()
+
+    def is_change(self) -> bool:
+        return self in (self.now_matches, self.no_longer_matches)
 
 
 class StateDeltasHandler:
@@ -31,19 +54,12 @@ class StateDeltasHandler:
         event_id: Optional[str],
         key_name: str,
         public_value: str,
-    ) -> Optional[bool]:
+    ) -> DiffWithRefVal:
         """Given two events check if the `key_name` field in content changed
         from not matching `public_value` to doing so.
 
         For example, check if `history_visibility` (`key_name`) changed from
-        `shared` to `world_readable` (`public_value`).
-
-        Returns:
-            None if the field in the events either both match `public_value`
-            or if neither do, i.e. there has been no change.
-            True if it didn't match `public_value` but now does
-            False if it did match `public_value` but now doesn't
-        """
+        `shared` to `world_readable` (`public_value`)."""
         prev_event = None
         event = None
         if prev_event_id:
@@ -54,7 +70,7 @@ class StateDeltasHandler:
 
         if not event and not prev_event:
             logger.debug("Neither event exists: %r %r", prev_event_id, event_id)
-            return None
+            return DiffWithRefVal.neither_match
 
         prev_value = None
         value = None
@@ -67,9 +83,13 @@ class StateDeltasHandler:
 
         logger.debug("prev_value: %r -> value: %r", prev_value, value)
 
-        if value == public_value and prev_value != public_value:
-            return True
-        elif value != public_value and prev_value == public_value:
-            return False
+        if value == public_value:
+            if prev_value == public_value:
+                return DiffWithRefVal.both_match
+            else:
+                return DiffWithRefVal.now_matches
         else:
-            return None
+            if prev_value == public_value:
+                return DiffWithRefVal.stopped_matching
+            else:
+                return DiffWithRefVal.neither_match
