@@ -35,6 +35,7 @@ class DiffWithRefVal(Enum):
     x1 != v and x2 == v: now matches, changed
     x1 == v and x2 != v: no longer matches, changed
     """
+
     both_match = auto()
     neither_match = auto()
     now_matches = auto()

@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import synapse.metrics
 from synapse.api.constants import EventTypes, HistoryVisibility, JoinRules, Membership
-from synapse.handlers.state_deltas import StateDeltasHandler, DiffWithRefVal
+from synapse.handlers.state_deltas import DiffWithRefVal, StateDeltasHandler
 from synapse.metrics.background_process_metrics import run_as_background_process
 from synapse.storage.roommember import ProfileInfo
 from synapse.types import JsonDict
