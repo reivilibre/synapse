@@ -18,6 +18,8 @@ from typing import Any, Dict, Iterable, Optional, Sequence, Set, Tuple
 
 from synapse.api.constants import EventTypes, HistoryVisibility, JoinRules
 from synapse.storage.database import DatabasePool, LoggingTransaction
+from synapse.storage.databases.main.profile import ProfileWorkerStore
+from synapse.storage.databases.main.roommember import RoomMemberWorkerStore
 from synapse.storage.databases.main.state import StateFilter
 from synapse.storage.databases.main.state_deltas import StateDeltasStore
 from synapse.storage.engines import PostgresEngine, Sqlite3Engine
@@ -30,7 +32,9 @@ logger = logging.getLogger(__name__)
 TEMP_TABLE = "_temp_populate_user_directory"
 
 
-class UserDirectoryBackgroundUpdateStore(StateDeltasStore):
+class UserDirectoryBackgroundUpdateStore(
+    StateDeltasStore, RoomMemberWorkerStore, ProfileWorkerStore
+):
 
     # How many records do we calculate before sending it to
     # add_users_who_share_private_rooms?
