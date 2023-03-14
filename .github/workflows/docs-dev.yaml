@@ -30,7 +30,7 @@ jobs:
       - name: Build the documentation
         run: |
           cd dev-docs
-          make html
+          poetry run make html
 
       # Figure out the target directory.
       #
